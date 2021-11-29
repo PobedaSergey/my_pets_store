@@ -1,6 +1,6 @@
-from typing import Optional, List, Any, Iterable
+from typing import Iterable
 from sqlalchemy.orm import Session
-from fastapi import FastAPI, Query, Depends, HTTPException
+from fastapi import HTTPException
 
 
 import schemas
