@@ -1,6 +1,6 @@
 import uvicorn
 from typing import List
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 import crud
@@ -43,8 +43,8 @@ async def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db
 
 
 @app.post("/user/{user_id}/pets/", tags=["Pets"])
-async def create_pet_for_user(user_id: int,
-                              pet: schemas.PetCreate,
+async def create_pet_for_user(pet: schemas.PetCreate,
+                              user_id: int = Path(..., description="Пользовательский id"),
                               db: Session = Depends(get_db)):
     logger.info(f'Попытка добавления питомца по кличке "{pet.title}" пользователю с id = "{user_id}"')
     user = crud.get_user(user_id, db)
@@ -61,7 +61,9 @@ async def create_pet_for_user(user_id: int,
 
 # GET
 @app.get("/users/", response_model=List[schemas.User], tags=["Users"])
-async def show_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+async def show_users(skip: int = Query(0, description="Сколько записей пропустить"),
+                     limit: int = Query(100, description="Максимальное число отображаемых записей"),
+                     db: Session = Depends(get_db)):
     logger.info("Попытка отобразить всех пользователей")
     users = crud.get_entries(models.User, db, skip, limit)
     crud.check_for_existence_in_db(users, "База данных пользователей пуста")
@@ -69,8 +71,9 @@ async def show_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_
     return users
 
 
-@app.get("/user/{user_id}", response_model=schemas.User, tags=["Users"])
-async def show_user(user_id: int, db: Session = Depends(get_db)):
+@app.get("/user/{user_id}/", response_model=schemas.User, tags=["Users"])
+async def show_user(user_id: int = Path(..., description="Пользовательский id"),
+                    db: Session = Depends(get_db)):
     logger.info(f"Попытка отобразить пользователя с id = {user_id}")
     user = crud.get_user(user_id, db)
     crud.check_for_existence_in_db(user, f"Пользователь с id {user_id} не найден")
@@ -79,7 +82,9 @@ async def show_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/pet/", response_model=schemas.Pet, tags=["Pets"])
-async def show_pet(pet_id: int, owner_id: int, db: Session = Depends(get_db)):
+async def show_pet(pet_id: int = Query(..., description="id питомца"),
+                   owner_id: int = Query(..., description="Пользовательский id"),
+                   db: Session = Depends(get_db)):
     logger.info(f"Попытка отобразить информацию о питомце по id хозяина = {owner_id} и id животного = {pet_id}")
     pet = crud.get_pet(owner_id, pet_id, db)
     crud.check_for_existence_in_db(pet, f"Питомец по id хозяина = {owner_id} и id животного = {pet_id} не найден")
@@ -88,7 +93,8 @@ async def show_pet(pet_id: int, owner_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/pets/{user_id}/", tags=["Pets"])
-async def show_pets_of_user(user_id: int, db: Session = Depends(get_db)):
+async def show_pets_of_user(user_id: int = Path(..., description="Пользовательский id"),
+                            db: Session = Depends(get_db)):
     logger.info(f"Попытка отобразить всех питомцев пользователя с id = {user_id}")
     pets_of_user = crud.get_all_pets_from_user(user_id, db)
     crud.check_for_existence_in_db(pets_of_user, f"У пользователя с id = {user_id} нет питомцев "
@@ -98,7 +104,9 @@ async def show_pets_of_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/pets/", response_model=List[schemas.Pet], tags=["Pets"])
-async def show_all_pets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+async def show_all_pets(skip: int = Query(0, description="Сколько записей пропустить"),
+                        limit: int = Query(100, description="Максимальное число отображаемых записей"),
+                        db: Session = Depends(get_db)):
     logger.info("Попытка отобразить всех питомцев в магазине")
     all_pets = crud.get_entries(models.Pet, db, skip, limit)
     crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста")
@@ -107,8 +115,10 @@ async def show_all_pets(skip: int = 0, limit: int = 100, db: Session = Depends(g
 
 
 # PUT
-@app.put("/user/{user_id}", tags=["Users"])
-async def change_user_by_id(user_id: int, new_email: str,  db: Session = Depends(get_db)):
+@app.put("/user/{user_id}/", tags=["Users"])
+async def change_user_by_id(user_id: int = Path(..., description="Пользовательский id"),
+                            new_email: str = Query(..., description="Новый email"),
+                            db: Session = Depends(get_db)):
     logger.info(f"Попытка изменить информацию о пользователе с id = {user_id}")
     user = crud.get_user(user_id, db)
     crud.check_for_existence_in_db(user, f"Пользователь с id {user_id} не найден")
@@ -119,11 +129,11 @@ async def change_user_by_id(user_id: int, new_email: str,  db: Session = Depends
     return {"detail": "Электронная почта пользователя изменена"}
 
 
-@app.put("/user/{user_id}/{owner_id}", tags=["Pets"])
-async def change_pets(pet_id: int,
-                      owner_id: int,
-                      new_title: str,
-                      new_description: str,
+@app.put("/user/{pet_id}/{owner_id}/", tags=["Pets"])
+async def change_pets(pet_id: int = Path(..., description="id питомца"),
+                      owner_id: int = Path(..., description="id пользователя"),
+                      new_title: str = Query(..., description="Измененная кличка"),
+                      new_description: str = Query(..., description="Измененное описание"),
                       db: Session = Depends(get_db)):
     logger.info(f"Попытка изменить информацию о питомце по id хозяина = {owner_id} и id животного = {pet_id}")
     user = crud.get_user(owner_id, db)
@@ -139,8 +149,9 @@ async def change_pets(pet_id: int,
 
 
 # DELETE
-@app.delete("/user/{user_id}", tags=["Users"])
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
+@app.delete("/user/{user_id}/", tags=["Users"])
+async def delete_user(user_id: int = Path(..., description="id удаляемого пользователя"),
+                      db: Session = Depends(get_db)):
     logger.info(f"Попытка удаления пользователя с id = {user_id}")
     all_pets_from_user = crud.get_all_pets_from_user(user_id, db)
     crud.delete_entries(all_pets_from_user, db)
@@ -150,8 +161,10 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
     return {"detail": "Пользователь удален"}
 
 
-@app.delete("/pet/{user_id}/{pet_id}", tags=["Pets"])
-async def delete_pet(owner_id: int, pet_id: int, db: Session = Depends(get_db)):
+@app.delete("/pet/{pet_id}/{owner_id}/", tags=["Pets"])
+async def delete_pet(pet_id: int = Path(..., description="id питомца"),
+                     owner_id: int = Path(..., description="id пользователя"),
+                     db: Session = Depends(get_db)):
     logger.info(f"Попытка удаления питомца по id хозяина = {owner_id} и id животного = {pet_id}")
     pet_to_be_deleted = crud.get_pet(owner_id, pet_id, db)
     crud.check_for_existence_in_db(pet_to_be_deleted,
@@ -161,7 +174,8 @@ async def delete_pet(owner_id: int, pet_id: int, db: Session = Depends(get_db)):
 
 
 @app.delete("/pets/{owner_id}/", tags=["Pets"])
-async def deleting_all_pets_from_user(owner_id: int, db: Session = Depends(get_db)):
+async def deleting_all_pets_from_user(owner_id: int = Path(..., description="id пользователя"),
+                                      db: Session = Depends(get_db)):
     logger.info(f"Попытка удаления все питомцев у пользователя с id = {owner_id}")
     all_pets_from_user = crud.get_all_pets_from_user(owner_id, db)
     crud.check_for_existence_in_db(all_pets_from_user, f"У пользователей с id = {owner_id} нет питомцев "
