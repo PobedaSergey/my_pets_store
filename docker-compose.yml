@@ -5,14 +5,9 @@ services:
         build:
             context: .
         command: ["python", "-u", "./main.py"]
-#        healthcheck:
-#            test: curl --http0.9 localhost:${health_check_port}
-#            interval: 5s
-#            timeout: 5s
-#            retries: 3
         restart: always
         ports:
-            - "8004:8004"
+            - "8006:8006"
         networks:
           - myTestNetwork
 
