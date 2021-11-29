@@ -1,11 +1,12 @@
 import uvicorn
-from typing import Optional, List
-from fastapi import FastAPI, Query, Depends, HTTPException
+from typing import List
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ver2_db import crud, models, schemas
+import crud
+import models
+import schemas
 from database import SessionLocal, engine
-
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -18,6 +19,7 @@ app = FastAPI(
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },
 )
+
 
 # tags_metadata = [{"name": "user"}, {"name": "users"}]
 
@@ -77,7 +79,7 @@ async def read_pet(id: int, owner_id: int, db: Session = Depends(get_db)):
 # Запросы PUT
 # TODO добавить ответ, а также совпадения по почте
 @app.put("/user/{user_id}", tags=["Users"])
-async def change_user_by_id(user_id: int, new_email: str,  db: Session = Depends(get_db)):
+async def change_user_by_id(user_id: int, new_email: str, db: Session = Depends(get_db)):
     user = crud.get_user(db=db, user_id=user_id)
     crud.put_user(db=db, user=user, new_email=new_email)
     return "Ok"
@@ -102,7 +104,7 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
     user_to_be_deleted = crud.get_user(db, user_id=user_id)
     if user_to_be_deleted is None:
         raise HTTPException(status_code=404, detail="User not found")
-    crud.delete_user(db,  user_to_be_deleted)
+    crud.delete_user(db, user_to_be_deleted)
     return "User deleted"
 
 
@@ -111,7 +113,7 @@ async def delete_pet(owner_id: int, pet_id: int, db: Session = Depends(get_db)):
     pet_to_be_deleted = crud.get_pet(id=pet_id, owner_id=owner_id, db=db)
     if pet_to_be_deleted is None:
         raise HTTPException(status_code=404, detail="Pet not found")
-    crud.delete_pet(db,  pet_to_be_deleted)
+    crud.delete_pet(db, pet_to_be_deleted)
     return "Pet deleted"
 
 

@@ -1,8 +1,7 @@
-import pickle
-from typing import Optional
 from sqlalchemy.orm import Session
 
-from ver2_db import schemas, models
+import schemas
+import models
 
 
 # Функции POST
