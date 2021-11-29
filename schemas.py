@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List
 
 
+# TODO добавить возраст питомца?
 class PetBase(BaseModel):
     title: str = Field(..., title="Кличка питомца")
     description: str = Field(None, title="Характерные черты питомца")
@@ -13,6 +14,7 @@ class PetBase(BaseModel):
                 "description": "Большая рыжая собака"
             }
         }
+
 
 class PetCreate(PetBase):
     pass
@@ -38,6 +40,7 @@ class UserCreate(UserBase):
                           example="example_password", min_length=4)
 
 
+# TODO добавить время регистрации?
 class User(UserBase):
     id: int
     pets: List[Pet] = []
