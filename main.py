@@ -2,9 +2,11 @@ import uvicorn
 from typing import Optional, List
 from fastapi import FastAPI, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
-import requests
 
-from . import crud, models, schemas, logger
+import crud
+import models
+import schemas
+from logs import *
 from database import SessionLocal, engine
 
 

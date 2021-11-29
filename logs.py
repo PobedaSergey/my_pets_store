@@ -1,5 +1,4 @@
 from os import path, remove
-import logging
 import logging.config
 
 # Удалите существующий файл лога, если он есть, чтобы создавать новый файл во время каждого выполнения

@@ -1,14 +1,11 @@
-import pickle
 from typing import Optional, List, Any, Iterable
 from sqlalchemy.orm import Session
 from fastapi import FastAPI, Query, Depends, HTTPException
-import logging
+
 
 import schemas
 import models
-
-
-logger = logging.getLogger(__name__)
+from logs import *
 
 
 # POST
