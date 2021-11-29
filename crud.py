@@ -24,7 +24,7 @@ def create_user(user: schemas.UserCreate, db: Session) -> models.User:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    logger.info(f'Пользователь c email: "{db_user.email}" добавлен')
+    logger.info(f'Пользователь c email: "{db_user.email}" и id = {db_user.id} создан')
     return db_user
 
 
@@ -40,7 +40,7 @@ def create_user_pet(pet: schemas.PetCreate, user_id: int, db: Session) -> models
     db.add(db_pet)
     db.commit()
     db.refresh(db_pet)
-    logger.info(f'Питомец по кличке "{db_pet.title}" добавлен')
+    logger.info(f'Питомец по кличке "{db_pet.title}" добавлен пользователю с id = {user_id}')
     return db_pet
 
 
@@ -128,6 +128,7 @@ def put_user(user: schemas.User, new_email: str, db: Session) -> None:
     user.email = new_email
     db.commit()
     db.refresh(user)
+    logger.info(f"Информация о пользователе с id = {user.id} изменена")
 
 
 def put_pet(pet: schemas.Pet,
@@ -146,19 +147,25 @@ def put_pet(pet: schemas.Pet,
     pet.description = new_description
     db.commit()
     db.refresh(pet)
+    logger.info(f"Информация о питомце по id хозяина = {pet.owner_id} и id животного = {pet.id} изменена")
 
 
 # DELETE
 def delete_entry(entry: models.Base, db: Session) -> None:
     """
-    Удаляет соответствующую запись в базе данных
+    Определяет тип переданного объекта и удаляет его из базы данных
     :param entry: сама запись которую необходимо удалить
     :param db: соединение с базой данных
-    :return: ничего не возвращает
+    :return: делает запись в лог, ничего не возвращает
     """
-    db.delete(entry)
-    db.commit()
-    logger.info(f"Запись {entry} удалена")
+    if isinstance(entry, models.User):
+        db.delete(entry)
+        db.commit()
+        logger.info(f"Пользователь с id = {entry.id} удален")
+    if isinstance(entry, models.Pet):
+        db.delete(entry)
+        db.commit()
+        logger.info(f"Питомец с id хозяина = {entry.owner_id} и id животного = {entry.id} удален")
 
 
 def delete_entries(entries: models.Base, db: Session) -> None:
@@ -166,12 +173,10 @@ def delete_entries(entries: models.Base, db: Session) -> None:
     Удаляет список записей в базе данных
     :param entries: удаляемые записи
     :param db: соединение с базой данных
-    :return: ничего не возвращает
+    :return: делает запись в лог, ничего не возвращает
     """
     for i in entries:
-        db.delete(i)
-        db.commit()
-    logger.info(f"Записи из {entries} удалены")
+        delete_entry(i, db)
 
 
 # Прочие функции
@@ -217,14 +222,10 @@ def check_for_existence_in_db(entry: models.Base,
     """
     if exception:
         if not entry:
-            logger.warning(f'exception = True, список пуст')
             logger.warning(f'{status_code} {detail}')
             raise type_error(status_code=status_code, detail=detail)
-        else:
-            logger.warning(f'exception = True, список не пуст, удаляет список')
     else:
         if not entry:
             logger.warning(f'{status_code} {detail}')
-            logger.warning(f'exception = False, список пуст')
-        else:
-            logger.warning(f'exception = False, список не пуст, удаляет список')
+
+
