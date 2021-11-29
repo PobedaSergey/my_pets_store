@@ -1,27 +1,24 @@
 import uvicorn
-from typing import List
-from fastapi import FastAPI, Depends, HTTPException
+from typing import Optional, List
+from fastapi import FastAPI, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
+import logging
 
-import crud
-import models
-import schemas
+from . import crud, models, schemas, logger
 from database import SessionLocal, engine
+
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Тестовое API",
-    description="Вторая версия приложения, данные лежат в SQLite",
-    version="0.0.2",
+    description="Третья версия приложения, данные лежат в SQLite",
+    version="0.0.3",
     license_info={
         "name": "Допустим под лицензией Apache 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },
 )
-
-
-# tags_metadata = [{"name": "user"}, {"name": "users"}]
 
 
 def get_db():
@@ -32,116 +29,132 @@ def get_db():
         db.close()
 
 
-# Запросы POST
+# POST
 @app.post("/user/", response_model=schemas.User, tags=["Users"])
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_email(db, email=user.email)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    return crud.create_user(db=db, user=user)
+async def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db)):
+    logger.info(f'Попытка создать пользователя с email: "{new_user.email}"')
+    user_by_new_email = crud.get_user_by_email(new_user.email, db)
+    crud.checking_for_matches_in_db(user_by_new_email, "Пользователь с таким email уже зарегистрирован")
+    return crud.create_user(new_user, db)
 
 
-@app.post("/user/{user_id}/pets/", response_model=schemas.Pet, tags=["Pets"])
-async def create_pet_for_user(user_id: int, pet: schemas.PetCreate, db: Session = Depends(get_db)):
-    return crud.create_user_pet(db=db, pet=pet, user_id=user_id)
+@app.post("/user/{user_id}/pets/", tags=["Pets"])
+async def create_pet_for_user(user_id: int,
+                              pet: schemas.PetCreate,
+                              db: Session = Depends(get_db)):
+    logger.info(f'Попытка создания питомца по кличке "{pet.title}"')
+    user = crud.get_user(user_id, db)
+    crud.check_for_existence_in_db(user, "Пользователь не найден")
+    all_pets_from_user = crud.get_all_pets_from_user(user_id, db)
+    for users_pet in all_pets_from_user:
+        if pet.title == users_pet.title and pet.description == users_pet.description:
+            status_code, detail = 400, "У пользователя уже есть питомец с такой кличкой и описанием"
+            logger.warning(f"{status_code} {detail}")
+            raise HTTPException(status_code, detail)
+    crud.create_user_pet(pet, user_id, db)
+    return {"detail": "Питомец добавлен"}
 
 
-# Запросы GET
-# TODO добавить ответ
+# GET
 @app.get("/users/", response_model=List[schemas.User], tags=["Users"])
-async def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.get_users(db, skip=skip, limit=limit)
+async def show_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_entries(models.User, db, skip, limit)
+    crud.check_for_existence_in_db(users, "База данных пользователей пуста")
+    logger.info("Информация о пользователях предоставлена")
     return users
 
 
 @app.get("/user/{user_id}", response_model=schemas.User, tags=["Users"])
-async def read_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=user_id)
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+async def show_user(user_id: int, db: Session = Depends(get_db)):
+    user = crud.get_user(user_id, db)
+    crud.check_for_existence_in_db(user, "Пользователь не найден")
+    return user
 
 
-# TODO добавить ответ
-@app.get("/pets/", response_model=List[schemas.Pet], tags=["Pets"])
-async def read_pets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    pets = crud.get_pets(db, skip=skip, limit=limit)
-    return pets
-
-
-# TODO добавить ответ
 @app.get("/pet/", response_model=schemas.Pet, tags=["Pets"])
-async def read_pet(id: int, owner_id: int, db: Session = Depends(get_db)):
-    pet = crud.get_pet(owner_id=owner_id, id=id, db=db)
+async def show_pet(pet_id: int, owner_id: int, db: Session = Depends(get_db)):
+    pet = crud.get_pet(owner_id, pet_id, db)
+    crud.check_for_existence_in_db(pet, "Питомец не найден")
     return pet
 
 
-# Запросы PUT
-# TODO добавить ответ, а также совпадения по почте
+@app.get("/pets/{user_id}/", tags=["Pets"])
+async def show_pets_of_user(user_id: int, db: Session = Depends(get_db)):
+    pets_of_user = crud.get_all_pets_from_user(user_id, db)
+    crud.check_for_existence_in_db(pets_of_user, "У пользователя нет питомцев")
+    return pets_of_user
+
+
+@app.get("/pets/", response_model=List[schemas.Pet], tags=["Pets"])
+async def show_all_pets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    all_pets = crud.get_entries(models.Pet, db, skip, limit)
+    crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста")
+    return all_pets
+
+
+# PUT
 @app.put("/user/{user_id}", tags=["Users"])
-async def change_user_by_id(user_id: int, new_email: str, db: Session = Depends(get_db)):
-    user = crud.get_user(db=db, user_id=user_id)
-    crud.put_user(db=db, user=user, new_email=new_email)
-    return "Ok"
+async def change_user_by_id(user_id: int, new_email: str,  db: Session = Depends(get_db)):
+    user_with_the_same_email = crud.get_user_by_email(new_email, db)
+    crud.checking_for_matches_in_db(user_with_the_same_email, "Пользователь с таким email уже зарегистрирован")
+    user = crud.get_user(user_id, db)
+    crud.put_user(user, new_email, db)
+    return {"detail": "User email changed"}
 
 
-# TODO добавить ответ, а также совпадения по почте
 @app.put("/user/{user_id}/{owner_id}", tags=["Pets"])
-async def change_pets(id: int, owner_id: int, new_title: str, new_description: str, db: Session = Depends(get_db)):
-    pet = crud.get_pet(db=db, id=id, owner_id=owner_id)
-    crud.put_pet(db=db, pet=pet, new_title=new_title, new_description=new_description)
-    return "Ok"
+async def change_pets(pet_id: int,
+                      owner_id: int,
+                      new_title: str,
+                      new_description: str,
+                      db: Session = Depends(get_db)):
+    modified_pet = crud.get_pets_by_title_and_description(new_title, new_description, db)
+    crud.checking_for_matches_in_db(modified_pet,
+                                    "У пользователя уже есть питомец с такой кличкой и описанием")
+    pet = crud.get_pet(owner_id, pet_id, db)
+    crud.put_pet(pet, new_title, new_description, db)
+    return {"detail": "Pet description and title changed"}
 
 
-# Запросы DELETE
+# DELETE
 @app.delete("/user/{user_id}", tags=["Users"])
 async def delete_user(user_id: int, db: Session = Depends(get_db)):
-    all_pets_from_user = crud.get_all_pets_from_user(owner_id=user_id, db=db)
+    all_pets_from_user = crud.get_all_pets_from_user(user_id, db)
     if all_pets_from_user is not None:
-        for i in all_pets_from_user:
-            crud.delete_user(db, i)
-
-    user_to_be_deleted = crud.get_user(db, user_id=user_id)
-    if user_to_be_deleted is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    crud.delete_user(db, user_to_be_deleted)
-    return "User deleted"
+        crud.delete_entries(all_pets_from_user, db)
+    user_to_be_deleted = crud.get_user(user_id, db)
+    crud.check_for_existence_in_db(user_to_be_deleted, "Пользователь не найден")
+    crud.delete_entry(user_to_be_deleted, db)
+    return {"detail": "User deleted"}
 
 
 @app.delete("/pet/{user_id}/{pet_id}", tags=["Pets"])
 async def delete_pet(owner_id: int, pet_id: int, db: Session = Depends(get_db)):
-    pet_to_be_deleted = crud.get_pet(id=pet_id, owner_id=owner_id, db=db)
-    if pet_to_be_deleted is None:
-        raise HTTPException(status_code=404, detail="Pet not found")
-    crud.delete_pet(db, pet_to_be_deleted)
-    return "Pet deleted"
+    pet_to_be_deleted = crud.get_pet(owner_id, pet_id, db)
+    crud.check_for_existence_in_db(pet_to_be_deleted, "Питомец не найден")
+    crud.delete_entry(pet_to_be_deleted, db)
+    return {"detail": "Pet deleted"}
 
 
 @app.delete("/pets/{owner_id}/", tags=["Pets"])
 async def deleting_all_pets_from_user(owner_id: int, db: Session = Depends(get_db)):
-    all_pets_from_user = crud.get_all_pets_from_user(owner_id=owner_id, db=db)
-    if all_pets_from_user is None:
-        raise HTTPException(status_code=404, detail="User has no pets")
-    for i in all_pets_from_user:
-        crud.delete_user(db, i)
-    return "All pets for this user have been deleted "
+    all_pets_from_user = crud.get_all_pets_from_user(owner_id, db)
+    crud.check_for_existence_in_db(all_pets_from_user, "У пользователей нет питомцев")
+    crud.delete_entries(all_pets_from_user, db)
+    return {"detail": "All pets for this user have been deleted"}
 
 
 @app.delete("/users/", tags=["Users"])
 async def delete_all_users(db: Session = Depends(get_db)):
-    all_users = crud.get_all_users(db)
-    if all_users is None:
-        raise HTTPException(status_code=404, detail="User database is empty")
-    for i in all_users:
-        all_pets_from_user = crud.get_all_pets_from_user(owner_id=i.id, db=db)
-        if all_pets_from_user is not None:
-            for j in all_pets_from_user:
-                crud.delete_user(db, j)
-        user_to_be_deleted = crud.get_user(db, user_id=i.id)
-        if user_to_be_deleted is not None:
-            crud.delete_user(db, user_to_be_deleted)
-    return "User database cleared"
+    all_pets = crud.get_entries(models.Pet, db, display_all=True)
+    crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста", exception=False)
+    crud.delete_entries(all_pets, db)
+    all_users = crud.get_entries(models.User, db, display_all=True)
+    crud.check_for_existence_in_db(all_users, "База данных пользователей пуста")
+    crud.delete_entries(all_users, db)
+    return {"detail": "User database cleared"}
+
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8004)
+    uvicorn.run(app, host="0.0.0.0", port=8006)
