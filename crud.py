@@ -215,7 +215,6 @@ def check_for_existence_in_db(entry: models.Base,
     :param exception: если True то выбрасывает исключение и пишет об этом в лог,
                       если False то просто пишет ифнормацию в лог
     :return: пишет в лог, если записи в базе нет, опционально выбрасывает исключение
-             если проверка пройдена успешно, выполняет функцию func
     """
     if exception:
         if not entry:

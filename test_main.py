@@ -10,8 +10,8 @@ client = TestClient(app)
 # Тестирование метода create_user
 def test_creating_new_original_user(sequential_number,  email, password):
     # Параметр sequential_number не задает id создаваемых пользователей,
-    # но должен им соответствовать. sequential_number должен начинаться с 1
-    # и увеличиваться на 1 с созданием новых пользователей.
+    # но должен им соответствовать, sequential_number должен начинаться с 1
+    # и увеличиваться на 1 с созданием нового пользователя.
     response = client.post("/user/", json={"email": email, "password": password})
     assert response.status_code == 200
     assert response.json() == {"email": email,
