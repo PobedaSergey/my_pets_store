@@ -1,9 +1,15 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, validator
+from pydantic import BaseModel as PydanticBaseModel
 from typing import List
 from email_validator import validate_email, EmailNotValidError, EmailSyntaxError, EMAIL_MAX_LENGTH
 from fastapi import HTTPException
 
 from logs import *
+
+
+class BaseModel(PydanticBaseModel):
+    class Config:
+        anystr_strip_whitespace = True
 
 
 class PetBase(BaseModel):
