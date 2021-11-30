@@ -303,8 +303,3 @@ if __name__ == '__main__':
     # очищаем базу
     deleting_all_users_in_db()
     logger.info("Тестирование модуля main успешно завершено")
-
-
-
-
-
