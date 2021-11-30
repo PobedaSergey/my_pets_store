@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr,  validator
 from typing import List
+from email_validator import validate_email
 
 
 class PetBase(BaseModel):
@@ -28,15 +29,21 @@ class Pet(PetBase):
 
 
 class UserBase(BaseModel):
-    email: str = Field(...,
-                       title="Введите email",
-                       example="example@mail.ru", min_length=3)
+    email: EmailStr = Field(...,
+                            title="Введите email",
+                            example="example@mail.ru")
+
+    @validator('email')
+    def check_email(cls, email):
+        valid = validate_email(email, check_deliverability=True)
+        email = valid.email
+        return email
 
 
 class UserCreate(UserBase):
     password: str = Field(...,
-                          title="Введите пароль",
-                          example="example_password", min_length=4)
+                          title="Введите пароль, минимум 8 символов",
+                          example="example_password", min_length=8)
 
 
 class User(UserBase):

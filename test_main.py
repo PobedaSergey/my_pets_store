@@ -231,9 +231,9 @@ if __name__ == '__main__':
     # полная очистка базы
     deleting_all()
     # создаем оригинального пользователя
-    test_creating_new_original_user(1, "test_email_1", 12345)
+    test_creating_new_original_user(1, "test_email_1@mail.ru", "test_password")
     # создаем пользователя с таким же email
-    test_creating_user_with_an_email_that_already_exists_in_the_db("test_email_1", 67890)
+    test_creating_user_with_an_email_that_already_exists_in_the_db("test_email_1@mail.ru", "test_password")
     # создаем ему питомца
     creating_new_pet_for_user(1, "test_title_1", "test_description_1")
     # создаем питомца с таким же описанием
@@ -257,15 +257,15 @@ if __name__ == '__main__':
     # получаем питомцев по неправильному id пользователя
     display_all_pets_of_non_existent_user(55)
     # создаем второго пользователя
-    test_creating_new_original_user(2, "test_email_2", 67890)
+    test_creating_new_original_user(2, "test_email_2@mail.ru", "test_password")
     # создаем питомца второму пользователю
     creating_new_pet_for_user(2, "test_title_2", "test_description_2")
     # получаем список всех питомцев в магазине
     display_all_pets_when_they_are()
     # первому пользователю меняем email
-    change_email_to_user(1, "new_test_email_1")
+    change_email_to_user(1, "new_test_email_1@mail.ru")
     # второму меняем email на такой же как у первого
-    changing_the_user_email_to_an_existing_one_in_db(2, "new_test_email_1")
+    changing_the_user_email_to_an_existing_one_in_db(2, "new_test_email_1@mail.ru")
     # меняем почту несуществующему пользователю
     changing_the_email_of_user_that_does_not_exist_in_db(33, "test_email")
     # редактируем питомца несуществующего пользователя
@@ -297,7 +297,7 @@ if __name__ == '__main__':
     # удаляем пользователей из пустой базы
     deleting_all_users_in_an_empty_db()
     # создаем пользователя
-    test_creating_new_original_user(1, "test_email_3", "test_password_3")
+    test_creating_new_original_user(1, "test_email_3@mail.ru", "test_password")
     # отображаем питомцев пользователя у которого нет питомцев
     display_all_pets_when_there_are_none(1)
     # очищаем базу
