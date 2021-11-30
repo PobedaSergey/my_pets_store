@@ -14,8 +14,8 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Тестовое API",
-    description="Четвертая версия приложения",
-    version="0.0.4",
+    description="Пятая версия приложения",
+    version="0.0.5",
     license_info={
         "name": "Допустим под лицензией Apache 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
