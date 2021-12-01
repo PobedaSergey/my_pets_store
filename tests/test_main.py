@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 from main import app
-from repositories.logs import *
+from repositories.logs import logger
 
 client = TestClient(app)
 

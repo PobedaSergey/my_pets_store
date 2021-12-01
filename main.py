@@ -3,7 +3,7 @@ from typing import List
 from fastapi import FastAPI, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from db import crud
+from db import crud_base as crud
 import models
 import schemas
 from repositories.logs import *

@@ -1,11 +1,11 @@
 from typing import Iterable
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from pydantic import validate_arguments
 
 import schemas
 import models
-from repositories.logs import *
+from repositories.logs import logger
+from repositories.other_functions import encrypt_password
 
 
 # POST
@@ -177,14 +177,6 @@ def delete_entries(entries: models.Base, db: Session) -> None:
 
 
 # Прочие функции
-@validate_arguments
-def encrypt_password(password: str) -> str:
-    """
-    Имитирует хеширование пароля.
-    """
-    return password + "abracadabra"
-
-
 def checking_for_matches_in_db(entry: models.Base,
                                detail: str,
                                status_code: int = 400,
