@@ -4,13 +4,16 @@ from fastapi import FastAPI, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from db import crud_base as crud
-import models
+from models.users import User
+from models.pets import Pet
+from db.database import Base
 import schemas
 from repositories.logs import *
 from db.database import SessionLocal, engine
 
 
-models.Base.metadata.create_all(bind=engine)
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Тестовое API",
@@ -65,7 +68,7 @@ async def show_users(skip: int = Query(0, description="Сколько запис
                      limit: int = Query(100, description="Максимальное число отображаемых записей"),
                      db: Session = Depends(get_db)):
     logger.info("Попытка отобразить всех пользователей")
-    users = crud.get_entries(models.User, db, skip, limit)
+    users = crud.get_entries(User, db, skip, limit)
     crud.check_for_existence_in_db(users, "База данных пользователей пуста")
     logger.info("Информация о пользователях предоставлена")
     return users
@@ -108,7 +111,7 @@ async def show_all_pets(skip: int = Query(0, description="Сколько зап�
                         limit: int = Query(100, description="Максимальное число отображаемых записей"),
                         db: Session = Depends(get_db)):
     logger.info("Попытка отобразить всех питомцев в магазине")
-    all_pets = crud.get_entries(models.Pet, db, skip, limit)
+    all_pets = crud.get_entries(Pet, db, skip, limit)
     crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста")
     logger.info("Информация о всех питомцах в магазине предоставлена")
     return all_pets
@@ -187,10 +190,10 @@ async def deleting_all_pets_from_user(owner_id: int = Path(..., description="id 
 @app.delete("/users/", tags=["Users"])
 async def delete_all_users(db: Session = Depends(get_db)):
     logger.info("Попытка очистки базы данных пользователей")
-    all_pets = crud.get_entries(models.Pet, db, display_all=True)
+    all_pets = crud.get_entries(Pet, db, display_all=True)
     crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста", exception=False)
     crud.delete_entries(all_pets, db)
-    all_users = crud.get_entries(models.User, db, display_all=True)
+    all_users = crud.get_entries(User, db, display_all=True)
     crud.check_for_existence_in_db(all_users, "База данных пользователей пуста")
     crud.delete_entries(all_users, db)
     return {"detail": "Все пользователи удалены"}
