@@ -4,7 +4,7 @@ from typing import List
 from email_validator import validate_email, EmailNotValidError, EmailSyntaxError, EMAIL_MAX_LENGTH
 from fastapi import HTTPException
 
-from logs import *
+from repositories.logs import *
 
 
 class BaseModel(PydanticBaseModel):

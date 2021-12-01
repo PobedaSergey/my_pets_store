@@ -5,7 +5,7 @@ from pydantic import validate_arguments
 
 import schemas
 import models
-from logs import *
+from repositories.logs import *
 
 
 # POST

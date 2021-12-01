@@ -3,11 +3,11 @@ from typing import List
 from fastapi import FastAPI, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-import crud
+from db import crud
 import models
 import schemas
-from logs import *
-from database import SessionLocal, engine
+from repositories.logs import *
+from db.database import SessionLocal, engine
 
 
 models.Base.metadata.create_all(bind=engine)
