@@ -4,13 +4,13 @@ from fastapi import FastAPI, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from db import crud_base as crud
-from models.users import User
-from models.pets import Pet
+from models.users import UserModel
+from models.pets import PetModel
 from db.database import Base
-import schemas
+from schemas.users import UserCreate, UserSchemas
+from schemas.pets import PetCreate, PetSchemas
 from repositories.logs import *
 from db.database import SessionLocal, engine
-
 
 
 Base.metadata.create_all(bind=engine)
@@ -37,8 +37,8 @@ def get_db():
 
 
 # POST
-@app.post("/user/", response_model=schemas.User, tags=["Users"])
-async def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db)):
+@app.post("/user/", response_model=UserSchemas, tags=["Users"])
+async def create_user(new_user: UserCreate, db: Session = Depends(get_db)):
     logger.info(f'Попытка создать пользователя с email: "{new_user.email}"')
     user_by_new_email = crud.get_user_by_email(new_user.email, db)
     crud.checking_for_matches_in_db(user_by_new_email, "Пользователь с таким email уже зарегистрирован")
@@ -46,7 +46,7 @@ async def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db
 
 
 @app.post("/user/{user_id}/pets/", tags=["Pets"])
-async def create_pet_for_user(pet: schemas.PetCreate,
+async def create_pet_for_user(pet: PetCreate,
                               user_id: int = Path(..., description="Пользовательский id"),
                               db: Session = Depends(get_db)):
     logger.info(f'Попытка добавления питомца по кличке "{pet.animal_name}" пользователю с id = "{user_id}"')
@@ -63,18 +63,18 @@ async def create_pet_for_user(pet: schemas.PetCreate,
 
 
 # GET
-@app.get("/users/", response_model=List[schemas.User], tags=["Users"])
+@app.get("/users/", response_model=List[UserSchemas], tags=["Users"])
 async def show_users(skip: int = Query(0, description="Сколько записей пропустить"),
                      limit: int = Query(100, description="Максимальное число отображаемых записей"),
                      db: Session = Depends(get_db)):
     logger.info("Попытка отобразить всех пользователей")
-    users = crud.get_entries(User, db, skip, limit)
+    users = crud.get_entries(UserModel, db, skip, limit)
     crud.check_for_existence_in_db(users, "База данных пользователей пуста")
     logger.info("Информация о пользователях предоставлена")
     return users
 
 
-@app.get("/user/{user_id}/", response_model=schemas.User, tags=["Users"])
+@app.get("/user/{user_id}/", response_model=UserSchemas, tags=["Users"])
 async def show_user(user_id: int = Path(..., description="Пользовательский id"),
                     db: Session = Depends(get_db)):
     logger.info(f"Попытка отобразить пользователя с id = {user_id}")
@@ -84,7 +84,7 @@ async def show_user(user_id: int = Path(..., description="Пользовател
     return user
 
 
-@app.get("/pet/", response_model=schemas.Pet, tags=["Pets"])
+@app.get("/pet/", response_model=PetSchemas, tags=["Pets"])
 async def show_pet(pet_id: int = Query(..., description="id питомца"),
                    owner_id: int = Query(..., description="Пользовательский id"),
                    db: Session = Depends(get_db)):
@@ -106,12 +106,12 @@ async def show_pets_of_user(user_id: int = Path(..., description="Пользов
     return pets_of_user
 
 
-@app.get("/pets/", response_model=List[schemas.Pet], tags=["Pets"])
+@app.get("/pets/", response_model=List[PetSchemas], tags=["Pets"])
 async def show_all_pets(skip: int = Query(0, description="Сколько записей пропустить"),
                         limit: int = Query(100, description="Максимальное число отображаемых записей"),
                         db: Session = Depends(get_db)):
     logger.info("Попытка отобразить всех питомцев в магазине")
-    all_pets = crud.get_entries(Pet, db, skip, limit)
+    all_pets = crud.get_entries(PetModel, db, skip, limit)
     crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста")
     logger.info("Информация о всех питомцах в магазине предоставлена")
     return all_pets
@@ -190,10 +190,10 @@ async def deleting_all_pets_from_user(owner_id: int = Path(..., description="id 
 @app.delete("/users/", tags=["Users"])
 async def delete_all_users(db: Session = Depends(get_db)):
     logger.info("Попытка очистки базы данных пользователей")
-    all_pets = crud.get_entries(Pet, db, display_all=True)
+    all_pets = crud.get_entries(PetModel, db, display_all=True)
     crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста", exception=False)
     crud.delete_entries(all_pets, db)
-    all_users = crud.get_entries(User, db, display_all=True)
+    all_users = crud.get_entries(UserModel, db, display_all=True)
     crud.check_for_existence_in_db(all_users, "База данных пользователей пуста")
     crud.delete_entries(all_users, db)
     return {"detail": "Все пользователи удалены"}

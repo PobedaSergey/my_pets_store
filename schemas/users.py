@@ -1,40 +1,11 @@
+from schemas.base_model import BaseModel
 from pydantic import Field, validator
-from pydantic import BaseModel as PydanticBaseModel
 from typing import List
 from email_validator import validate_email, EmailNotValidError, EmailSyntaxError, EMAIL_MAX_LENGTH
 from fastapi import HTTPException
 
-from repositories.logs import *
-
-
-class BaseModel(PydanticBaseModel):
-    class Config:
-        anystr_strip_whitespace = True
-
-
-class PetBase(BaseModel):
-    animal_name: str = Field(..., title="Кличка питомца")
-    description: str = Field(None, title="Характерные черты питомца")
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "animal_name": "Лапчик",
-                "description": "Большая рыжая собака"
-            }
-        }
-
-
-class PetCreate(PetBase):
-    pass
-
-
-class Pet(PetBase):
-    id: int
-    owner_id: int
-
-    class Config:
-        orm_mode = True
+from repositories.logs import logger
+from schemas.pets import PetSchemas
 
 
 class UserBase(BaseModel):
@@ -62,9 +33,9 @@ class UserCreate(UserBase):
                           example="example_password", min_length=8)
 
 
-class User(UserBase):
+class UserSchemas(UserBase):
     id: int
-    pets: List[Pet] = []
+    pets: List[PetSchemas] = []
 
     class Config:
         orm_mode = True

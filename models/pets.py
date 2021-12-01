@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from db.database import Base
 
 
-class Pet(Base):
+class PetModel(Base):
     __tablename__ = "pets"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -12,4 +12,4 @@ class Pet(Base):
     description = Column(String, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
 
-    owner = relationship("User", back_populates="pets")
+    owner = relationship("UserModel", back_populates="pets")

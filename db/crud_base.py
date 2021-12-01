@@ -2,24 +2,25 @@ from typing import Iterable
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
-import schemas
-from models.users import User
-from models.pets import Pet
+from schemas.users import UserCreate, UserSchemas
+from schemas.pets import PetCreate, PetSchemas
+from models.users import UserModel
+from models.pets import PetModel
 from db.database import Base
 from repositories.logs import logger
 from repositories.other_functions import encrypt_password
 
 
 # POST
-def create_user(user: schemas.UserCreate, db: Session) -> User:
+def create_user(user: UserCreate, db: Session) -> UserModel:
     """
     Создает нового пользователя, хеширует пароль.
     :param db: соединение с базой данных
     :param user: схема создания объекта
-    :return: только что созданную строчку в models.User
+    :return: только что созданную строчку в UserModel
     """
     fake_hashed_password = encrypt_password(user.password)
-    db_user = User(email=user.email, hashed_password=fake_hashed_password)
+    db_user = UserModel(email=user.email, hashed_password=fake_hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -27,15 +28,15 @@ def create_user(user: schemas.UserCreate, db: Session) -> User:
     return db_user
 
 
-def create_user_pet(pet: schemas.PetCreate, user_id: int, db: Session) -> Pet:
+def create_user_pet(pet: PetCreate, user_id: int, db: Session) -> PetModel:
     """
     Создает нового питомца, привязанного к пользователю.
     :param pet: схема создания объекта
     :param user_id: id пользовтеля к которому будет привязан питомец
     :param db: соединение с базой данных
-    :return: только что созданную строчку в models.Pet
+    :return: только что созданную строчку в PetModel
     """
-    db_pet = Pet(**pet.dict(), owner_id=user_id)
+    db_pet = PetModel(**pet.dict(), owner_id=user_id)
     db.add(db_pet)
     db.commit()
     db.refresh(db_pet)
@@ -44,46 +45,46 @@ def create_user_pet(pet: schemas.PetCreate, user_id: int, db: Session) -> Pet:
 
 
 # GET
-def get_user(user_id: int, db: Session) -> User:
+def get_user(user_id: int, db: Session) -> UserModel:
     """
     Возвращает информацию о пользователе по его id
     :param user_id: id по которому будет производится поиск
     :param db: соединение с базой данных
-    :return: запись в models.User соответствующую указанному id
+    :return: запись в UserModel соответствующую указанному id
     """
-    return db.query(User).filter(User.id == user_id).first()
+    return db.query(UserModel).filter(UserModel.id == user_id).first()
 
 
-def get_user_by_email(email: str, db: Session) -> User:
+def get_user_by_email(email: str, db: Session) -> UserModel:
     """
     Возвращает информацию о пользователе по его email
     :param email: email по которому будет искать
     :param db: соединение с базой данных
-    :return: запись в models.User соответствующую указанному email
+    :return: запись в UserModel соответствующую указанному email
     """
-    return db.query(User).filter(User.email == email).first()
+    return db.query(UserModel).filter(UserModel.email == email).first()
 
 
-def get_pet(owner_id: int, pet_id: int, db: Session) -> Pet:
+def get_pet(owner_id: int, pet_id: int, db: Session) -> PetModel:
     """
     Возвращает информацию о питомце по указанному id его хозяиина
     :param owner_id: id пользователя за которым закреплен питомец
     :param pet_id: id питомца
     :param db: соединение с базой данных
-    :return: запись в models.Pet соответствующую указанному owner_id
+    :return: запись в PetModel соответствующую указанному owner_id
     """
-    return db.query(Pet).filter_by(owner_id=owner_id, id=pet_id).first()
+    return db.query(PetModel).filter_by(owner_id=owner_id, id=pet_id).first()
 
 
-def get_pets_by_animal_name_and_description(animal_name: str, description: str, db: Session) -> Pet:
+def get_pets_by_animal_name_and_description(animal_name: str, description: str, db: Session) -> PetModel:
     """
     Возвращает информацию о питомце по указанному описанию и имени
     :param animal_name: имя питомца
     :param description: его описание
     :param db: соединение с базой данных
-    :return: запись в models.Pet соответствующую указанным параметрам
+    :return: запись в PetModel соответствующую указанным параметрам
     """
-    return db.query(Pet).filter_by(animal_name=animal_name, description=description,).first()
+    return db.query(PetModel).filter_by(animal_name=animal_name, description=description, ).first()
 
 
 def get_all_pets_from_user(user_id: int, db: Session) -> Iterable:
@@ -91,9 +92,9 @@ def get_all_pets_from_user(user_id: int, db: Session) -> Iterable:
     Возвращает записи обо всех питомцах данного пользователя
     :param user_id: id пользователя
     :param db: соединение с базой данных
-    :return: все записи в models.Pet по указанному id пользователя
+    :return: все записи в PetModel по указанному id пользователя
     """
-    return db.query(Pet).filter_by(owner_id=user_id).all()
+    return db.query(PetModel).filter_by(owner_id=user_id).all()
 
 
 def get_entries(table_name: Base,
@@ -116,7 +117,7 @@ def get_entries(table_name: Base,
 
 
 # PUT
-def put_user(user: schemas.User, new_email: str, db: Session) -> None:
+def put_user(user: UserSchemas, new_email: str, db: Session) -> None:
     """
     Изменяет данные пользователя в базе данных
     :param user: сам изменяемый объект
@@ -130,7 +131,7 @@ def put_user(user: schemas.User, new_email: str, db: Session) -> None:
     logger.info(f"Информация о пользователе с id = {user.id} изменена")
 
 
-def put_pet(pet: schemas.Pet,
+def put_pet(pet: PetSchemas,
             new_animal_name: str,
             new_description: str,
             db: Session) -> None:
@@ -157,11 +158,11 @@ def delete_entry(entry: Base, db: Session) -> None:
     :param db: соединение с базой данных
     :return: делает запись в лог, ничего не возвращает
     """
-    if isinstance(entry, User):
+    if isinstance(entry, UserModel):
         db.delete(entry)
         db.commit()
         logger.info(f"Пользователь с id = {entry.id} удален")
-    if isinstance(entry, Pet):
+    if isinstance(entry, PetModel):
         db.delete(entry)
         db.commit()
         logger.info(f"Питомец с id хозяина = {entry.owner_id} и id животного = {entry.id} удален")
@@ -218,5 +219,3 @@ def check_for_existence_in_db(entry: Base,
     else:
         if not entry:
             logger.warning(f'{status_code} {detail}')
-
-
