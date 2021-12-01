@@ -13,13 +13,13 @@ class BaseModel(PydanticBaseModel):
 
 
 class PetBase(BaseModel):
-    title: str = Field(..., title="Кличка питомца")
+    animal_name: str = Field(..., title="Кличка питомца")
     description: str = Field(None, title="Характерные черты питомца")
 
     class Config:
         schema_extra = {
             "example": {
-                "title": "Лапчик",
+                "animal_name": "Лапчик",
                 "description": "Большая рыжая собака"
             }
         }

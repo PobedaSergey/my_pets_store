@@ -1,7 +1,7 @@
 from typing import Iterable
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-
+from pydantic import validate_arguments
 
 import schemas
 import models
@@ -37,7 +37,7 @@ def create_user_pet(pet: schemas.PetCreate, user_id: int, db: Session) -> models
     db.add(db_pet)
     db.commit()
     db.refresh(db_pet)
-    logger.info(f'Питомец по кличке "{db_pet.title}" добавлен пользователю с id = {user_id}')
+    logger.info(f'Питомец по кличке "{db_pet.animal_name}" добавлен пользователю с id = {user_id}')
     return db_pet
 
 
@@ -73,15 +73,15 @@ def get_pet(owner_id: int, pet_id: int, db: Session) -> models.Pet:
     return db.query(models.Pet).filter_by(owner_id=owner_id, id=pet_id).first()
 
 
-def get_pets_by_title_and_description(title: str, description: str, db: Session) -> models.Pet:
+def get_pets_by_animal_name_and_description(animal_name: str, description: str, db: Session) -> models.Pet:
     """
     Возвращает информацию о питомце по указанному описанию и имени
-    :param title: имя питомца
+    :param animal_name: имя питомца
     :param description: его описание
     :param db: соединение с базой данных
     :return: запись в models.Pet соответствующую указанным параметрам
     """
-    return db.query(models.Pet).filter_by(title=title, description=description,).first()
+    return db.query(models.Pet).filter_by(animal_name=animal_name, description=description,).first()
 
 
 def get_all_pets_from_user(user_id: int, db: Session) -> Iterable:
@@ -129,18 +129,18 @@ def put_user(user: schemas.User, new_email: str, db: Session) -> None:
 
 
 def put_pet(pet: schemas.Pet,
-            new_title: str,
+            new_animal_name: str,
             new_description: str,
             db: Session) -> None:
     """
     Изменяет данные питомца в базе данных
     :param pet: сам изменяемый объект
-    :param new_title: новое имя питомца
+    :param new_animal_name: новое имя питомца
     :param new_description: новое описание
     :param db: соединение с базой данных
     :return: ничего не возвращает
     """
-    pet.title = new_title
+    pet.animal_name = new_animal_name
     pet.description = new_description
     db.commit()
     db.refresh(pet)
@@ -177,6 +177,7 @@ def delete_entries(entries: models.Base, db: Session) -> None:
 
 
 # Прочие функции
+@validate_arguments
 def encrypt_password(password: str) -> str:
     """
     Имитирует хеширование пароля.

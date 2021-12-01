@@ -26,20 +26,20 @@ def test_creating_user_with_an_email_that_already_exists_in_the_db(email, passwo
 
 
 # Тестирование метода create_pet_for_user
-def creating_new_pet_for_user(user_id, title, description):
-    response = client.post(f"/user/{user_id}/pets/", json={"title": title, "description": description})
+def creating_new_pet_for_user(user_id, animal_name, description):
+    response = client.post(f"/user/{user_id}/pets/", json={"animal_name": animal_name, "description": description})
     assert response.status_code == 200
     assert response.json() == {"detail": "Питомец добавлен"}
 
 
-def creating_pet_for_user_that_does_not_exist(user_id, title, description):
-    response = client.post(f"/user/{user_id}/pets/", json={"title": title, "description": description})
+def creating_pet_for_user_that_does_not_exist(user_id, animal_name, description):
+    response = client.post(f"/user/{user_id}/pets/", json={"animal_name": animal_name, "description": description})
     assert response.status_code == 404
     assert response.json() == {"detail": f"Пользователь с id {user_id} не найден"}
 
 
-def creating_pet_with_pre_existing_name_and_description(user_id, title, description):
-    response = client.post(f"/user/{user_id}/pets/", json={"title": title, "description": description})
+def creating_pet_with_pre_existing_name_and_description(user_id, animal_name, description):
+    response = client.post(f"/user/{user_id}/pets/", json={"animal_name": animal_name, "description": description})
     assert response.status_code == 400
     assert response.json() == {"detail": f"У пользователя с id {user_id} уже есть питомец с такой кличкой и описанием"}
 
@@ -79,7 +79,7 @@ def display_pet_on_wrong_id(pet_id, owner_id):
 def display_pet_by_correct_id(pet_id, owner_id):
     response = client.get(f"/pet/?pet_id={pet_id}&owner_id={owner_id}")
     assert response.status_code == 200
-    assert response.json() == {"title": "test_title_1",
+    assert response.json() == {"animal_name": "test_animal_name_1",
                                "description": "test_description_1",
                                "id": 1,
                                "owner_id": 1}
@@ -131,37 +131,37 @@ def change_email_to_user(user_id, new_email):
 
 
 # Тестирование метода change_pets
-def changing_non_existent_pet(pet_id, owner_id, new_title, new_description):
+def changing_non_existent_pet(pet_id, owner_id, new_animal_name, new_description):
     response = client.put(f"/user/{pet_id}/"
                           f"{owner_id}/?"
-                          f"new_title={new_title}/&"
+                          f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")
     assert response.status_code == 404
     assert response.json() == {"detail": f"Пользователь с id {owner_id} не найден"}
 
 
-def pet_change_by_nonexistent_owner(pet_id, owner_id, new_title, new_description):
+def pet_change_by_nonexistent_owner(pet_id, owner_id, new_animal_name, new_description):
     response = client.put(f"/user/{pet_id}/"
                           f"{owner_id}/?"
-                          f"new_title={new_title}/&"
+                          f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")
     assert response.status_code == 404
     assert response.json() == {"detail": "Питомец с таким id у данного пользователя не найден"}
 
 
-def changing_pet_data_to_existing_ones_for_the_user(pet_id, owner_id, new_title, new_description):
+def changing_pet_data_to_existing_ones_for_the_user(pet_id, owner_id, new_animal_name, new_description):
     response = client.put(f"/user/{pet_id}/"
                           f"{owner_id}/?"
-                          f"new_title={new_title}/&"
+                          f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")
     assert response.status_code == 400
     assert response.json() == {"detail": "У пользователя уже есть питомец с такой кличкой и описанием"}
 
 
-def changing_pet_data(pet_id, owner_id, new_title, new_description):
+def changing_pet_data(pet_id, owner_id, new_animal_name, new_description):
     response = client.put(f"/user/{pet_id}/"
                           f"{owner_id}/?"
-                          f"new_title={new_title}/&"
+                          f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")
     assert response.status_code == 200
     assert {"detail": "Данные питомца изменены"}
@@ -235,11 +235,11 @@ if __name__ == '__main__':
     # создаем пользователя с таким же email
     test_creating_user_with_an_email_that_already_exists_in_the_db("test_email_1@mail.ru", "test_password")
     # создаем ему питомца
-    creating_new_pet_for_user(1, "test_title_1", "test_description_1")
+    creating_new_pet_for_user(1, "test_animal_name_1", "test_description_1")
     # создаем питомца с таким же описанием
-    creating_pet_with_pre_existing_name_and_description(1, "test_title_1", "test_description_1")
+    creating_pet_with_pre_existing_name_and_description(1, "test_animal_name_1", "test_description_1")
     # создаем питомца несуществующему пользователю
-    creating_pet_for_user_that_does_not_exist(99, "test_title", "test_description")
+    creating_pet_for_user_that_does_not_exist(99, "test_animal_name", "test_description")
     # получаем информацию о существующем пользователе
     display_an_existing_user(1)
     # получаем информацию о не существующем пользователе
@@ -251,7 +251,7 @@ if __name__ == '__main__':
     # получаем информацию по корректным id
     display_pet_by_correct_id(1, 1)
     # создаем еще одного питомца первому пользователю
-    creating_new_pet_for_user(1, "test_title_2", "test_description_2")
+    creating_new_pet_for_user(1, "test_animal_name_2", "test_description_2")
     # получаем список его питомцев
     display_all_pets_of_user(1)
     # получаем питомцев по неправильному id пользователя
@@ -259,7 +259,7 @@ if __name__ == '__main__':
     # создаем второго пользователя
     test_creating_new_original_user(2, "test_email_2@mail.ru", "test_password")
     # создаем питомца второму пользователю
-    creating_new_pet_for_user(2, "test_title_2", "test_description_2")
+    creating_new_pet_for_user(2, "test_animal_name_2", "test_description_2")
     # получаем список всех питомцев в магазине
     display_all_pets_when_they_are()
     # первому пользователю меняем email
@@ -269,13 +269,13 @@ if __name__ == '__main__':
     # меняем почту несуществующему пользователю
     changing_the_email_of_user_that_does_not_exist_in_db(33, "test_email")
     # редактируем питомца несуществующего пользователя
-    pet_change_by_nonexistent_owner(77, 1, "new_title", "new_description")
+    pet_change_by_nonexistent_owner(77, 1, "new_animal_name", "new_description")
     # редактируем несуществующего питомца пользователя
-    changing_non_existent_pet(1, 77, "new_title", "new_description")
+    changing_non_existent_pet(1, 77, "new_animal_name", "new_description")
     # редактируем описание питомца первого пользователя
-    changing_pet_data(1, 1, "new_test_title_1", "new_test_description_1")
+    changing_pet_data(1, 1, "new_test_animal_name_1", "new_test_description_1")
     # редактируем описание питомца первого пользователя на такое же
-    changing_pet_data_to_existing_ones_for_the_user(2, 1, "new_test_title_1", "new_test_description_1")
+    changing_pet_data_to_existing_ones_for_the_user(2, 1, "new_test_animal_name_1", "new_test_description_1")
     # удаляем всех питомцев первого пользователя
     deleting_all_pets_from_the_user(1)
     # удаляем питомца второго пользователя

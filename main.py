@@ -46,12 +46,12 @@ async def create_user(new_user: schemas.UserCreate, db: Session = Depends(get_db
 async def create_pet_for_user(pet: schemas.PetCreate,
                               user_id: int = Path(..., description="Пользовательский id"),
                               db: Session = Depends(get_db)):
-    logger.info(f'Попытка добавления питомца по кличке "{pet.title}" пользователю с id = "{user_id}"')
+    logger.info(f'Попытка добавления питомца по кличке "{pet.animal_name}" пользователю с id = "{user_id}"')
     user = crud.get_user(user_id, db)
     crud.check_for_existence_in_db(user, f"Пользователь с id {user_id} не найден")
     all_pets_from_user = crud.get_all_pets_from_user(user_id, db)
     for users_pet in all_pets_from_user:
-        if pet.title == users_pet.title and pet.description == users_pet.description:
+        if pet.animal_name == users_pet.animal_name and pet.description == users_pet.description:
             status_code, detail = 400, f"У пользователя с id {user_id} уже есть питомец с такой кличкой и описанием"
             logger.warning(f"{status_code} {detail}")
             raise HTTPException(status_code, detail)
@@ -132,7 +132,7 @@ async def change_user_by_id(user_id: int = Path(..., description="Пользов
 @app.put("/user/{pet_id}/{owner_id}/", tags=["Pets"])
 async def change_pets(pet_id: int = Path(..., description="id питомца"),
                       owner_id: int = Path(..., description="id пользователя"),
-                      new_title: str = Query(..., description="Измененная кличка"),
+                      new_animal_name: str = Query(..., description="Измененная кличка"),
                       new_description: str = Query(..., description="Измененное описание"),
                       db: Session = Depends(get_db)):
     logger.info(f"Попытка изменить информацию о питомце по id хозяина = {owner_id} и id животного = {pet_id}")
@@ -140,11 +140,11 @@ async def change_pets(pet_id: int = Path(..., description="id питомца"),
     crud.check_for_existence_in_db(user, f"Пользователь с id {owner_id} не найден")
     user = crud.get_pet(owner_id, pet_id, db)
     crud.check_for_existence_in_db(user, f"Питомец с таким id у данного пользователя не найден")
-    modified_pet = crud.get_pets_by_title_and_description(new_title, new_description, db)
+    modified_pet = crud.get_pets_by_animal_name_and_description(new_animal_name, new_description, db)
     crud.checking_for_matches_in_db(modified_pet,
                                     "У пользователя уже есть питомец с такой кличкой и описанием")
     pet = crud.get_pet(owner_id, pet_id, db)
-    crud.put_pet(pet, new_title, new_description, db)
+    crud.put_pet(pet, new_animal_name, new_description, db)
     return {"detail": "Данные питомца изменены"}
 
 
