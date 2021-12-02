@@ -49,7 +49,7 @@ async def show_pets_of_user(user_id: int = Path(..., description="Пользов
     logger.info(f"Попытка отобразить всех питомцев пользователя с id = {user_id}")
     pets_of_user = crud_base.get_all_pets_from_user(user_id, db)
     crud_base.check_for_existence_in_db(pets_of_user, f"У пользователя с id = {user_id} нет питомцев "
-                                                 f"или пользователя с таким id не существует")
+                                                      f"или пользователя с таким id не существует")
     logger.info(f"Информация о питомцах пользователя с id = {user_id} предоставлена")
     return pets_of_user
 
@@ -104,6 +104,6 @@ async def deleting_all_pets_from_user(owner_id: int = Path(..., description="id 
     logger.info(f"Попытка удаления все питомцев у пользователя с id = {owner_id}")
     all_pets_from_user = crud_base.get_all_pets_from_user(owner_id, db)
     crud_base.check_for_existence_in_db(all_pets_from_user, f"У пользователей с id = {owner_id} нет питомцев "
-                                                       f"или такого пользователя не существует")
+                                                            f"или такого пользователя не существует")
     crud_base.delete_entries(all_pets_from_user, db)
     return {"detail": "Все питомцы пользователя удалены"}

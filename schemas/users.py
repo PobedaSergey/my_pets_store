@@ -13,6 +13,7 @@ class UserBase(BaseModel):
                        title="Введите email",
                        example="example@mail.ru")
 
+    @classmethod
     @validator('email')
     def check_email(cls, email):
         if len(email) >= EMAIL_MAX_LENGTH:

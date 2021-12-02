@@ -8,7 +8,7 @@ client = TestClient(app)
 
 # POST
 # Тестирование метода create_user
-def test_creating_new_original_user(sequential_number,  email, password):
+def test_creating_new_original_user(sequential_number, email, password):
     # Параметр sequential_number не задает id создаваемых пользователей,
     # но должен им соответствовать, sequential_number должен начинаться с 1
     # и увеличиваться на 1 с созданием нового пользователя.
