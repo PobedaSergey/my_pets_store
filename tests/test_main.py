@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from main import app
+from api.main import app
 from repositories.logs import logger
 
 client = TestClient(app)
@@ -27,19 +27,19 @@ def test_creating_user_with_an_email_that_already_exists_in_the_db(email, passwo
 
 # Тестирование метода create_pet_for_user
 def creating_new_pet_for_user(user_id, animal_name, description):
-    response = client.post(f"/user/{user_id}/pets/", json={"animal_name": animal_name, "description": description})
+    response = client.post(f"/pet/{user_id}/", json={"animal_name": animal_name, "description": description})
     assert response.status_code == 200
     assert response.json() == {"detail": "Питомец добавлен"}
 
 
 def creating_pet_for_user_that_does_not_exist(user_id, animal_name, description):
-    response = client.post(f"/user/{user_id}/pets/", json={"animal_name": animal_name, "description": description})
+    response = client.post(f"/pet/{user_id}/", json={"animal_name": animal_name, "description": description})
     assert response.status_code == 404
     assert response.json() == {"detail": f"Пользователь с id {user_id} не найден"}
 
 
 def creating_pet_with_pre_existing_name_and_description(user_id, animal_name, description):
-    response = client.post(f"/user/{user_id}/pets/", json={"animal_name": animal_name, "description": description})
+    response = client.post(f"/pet/{user_id}/", json={"animal_name": animal_name, "description": description})
     assert response.status_code == 400
     assert response.json() == {"detail": f"У пользователя с id {user_id} уже есть питомец с такой кличкой и описанием"}
 
@@ -132,7 +132,8 @@ def change_email_to_user(user_id, new_email):
 
 # Тестирование метода change_pets
 def changing_non_existent_pet(pet_id, owner_id, new_animal_name, new_description):
-    response = client.put(f"/user/{pet_id}/"
+    response = client.put(f"/pet/"
+                          f"{pet_id}/"
                           f"{owner_id}/?"
                           f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")
@@ -141,7 +142,8 @@ def changing_non_existent_pet(pet_id, owner_id, new_animal_name, new_description
 
 
 def pet_change_by_nonexistent_owner(pet_id, owner_id, new_animal_name, new_description):
-    response = client.put(f"/user/{pet_id}/"
+    response = client.put(f"/pet/"
+                          f"{pet_id}/"
                           f"{owner_id}/?"
                           f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")
@@ -150,7 +152,8 @@ def pet_change_by_nonexistent_owner(pet_id, owner_id, new_animal_name, new_descr
 
 
 def changing_pet_data_to_existing_ones_for_the_user(pet_id, owner_id, new_animal_name, new_description):
-    response = client.put(f"/user/{pet_id}/"
+    response = client.put(f"/pet/"
+                          f"{pet_id}/"
                           f"{owner_id}/?"
                           f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")
@@ -159,7 +162,8 @@ def changing_pet_data_to_existing_ones_for_the_user(pet_id, owner_id, new_animal
 
 
 def changing_pet_data(pet_id, owner_id, new_animal_name, new_description):
-    response = client.put(f"/user/{pet_id}/"
+    response = client.put(f"/pet/"
+                          f"{pet_id}/"
                           f"{owner_id}/?"
                           f"new_animal_name={new_animal_name}/&"
                           f"new_description={new_description}")

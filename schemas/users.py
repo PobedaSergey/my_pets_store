@@ -1,11 +1,11 @@
-from schemas.base_model import BaseModel
 from pydantic import Field, validator
 from typing import List
 from email_validator import validate_email, EmailNotValidError, EmailSyntaxError, EMAIL_MAX_LENGTH
 from fastapi import HTTPException
 
-from repositories.logs import logger
+from schemas.base_model import BaseModel
 from schemas.pets import PetSchemas
+from repositories.logs import logger
 
 
 class UserBase(BaseModel):
