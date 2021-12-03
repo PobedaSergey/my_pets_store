@@ -2,10 +2,10 @@ import uvicorn
 from fastapi import Depends, FastAPI
 
 from api.dependencies import get_db
-from api.users import router_user, router_users
 from api.pets import router_pet, router_pets
-from db.database import engine
+from api.users import router_user, router_users
 from db.database import Base
+from db.database import engine
 
 Base.metadata.create_all(bind=engine)
 

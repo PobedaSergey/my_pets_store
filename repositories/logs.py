@@ -1,5 +1,6 @@
-from os import path, remove
 import logging.config
+from os import path, remove
+
 
 if path.isfile("../python_logging.log"):
     remove("../python_logging.log")

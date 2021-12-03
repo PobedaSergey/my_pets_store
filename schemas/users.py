@@ -1,14 +1,14 @@
-from pydantic import Field, validator
 from typing import List
-from email_validator import validate_email, EmailNotValidError, EmailSyntaxError, EMAIL_MAX_LENGTH
 from fastapi import HTTPException
+from pydantic import Field, validator
+from email_validator import validate_email, EmailNotValidError, EmailSyntaxError, EMAIL_MAX_LENGTH
 
-from schemas.base_model import BaseModel
-from schemas.pets import PetSchemas
 from repositories.logs import logger
+from schemas.base_schemas import ModBaseModel
+from schemas.pets import PetSchemas
 
 
-class UserBase(BaseModel):
+class UserBase(ModBaseModel):
     email: str = Field(...,
                        title="Введите email",
                        example="example@mail.ru")

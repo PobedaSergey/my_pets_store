@@ -1,5 +1,5 @@
-from repositories.logs import logger
 from db.database import SessionLocal
+from repositories.logs import logger
 
 
 def get_db():

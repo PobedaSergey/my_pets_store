@@ -1,8 +1,9 @@
-from schemas.base_model import BaseModel
 from pydantic import Field
 
+from schemas.base_schemas import ModBaseModel
 
-class PetBase(BaseModel):
+
+class PetBase(ModBaseModel):
     animal_name: str = Field(..., title="Кличка питомца")
     description: str = Field(None, title="Характерные черты питомца")
 
