@@ -9,15 +9,25 @@ from repositories.logs import logger
 from schemas.pets import PetCreate, PetSchemas
 
 
-router_pet = APIRouter(prefix="/pet", tags=["Pet Operations"], dependencies=[Depends(get_db)])
-router_pets = APIRouter(prefix="/pets", tags=["Pet Operations"], dependencies=[Depends(get_db)])
+router_pet = APIRouter(
+    prefix="/pet",
+    tags=["Pet Operations"],
+    dependencies=[Depends(get_db)]
+)
+router_pets = APIRouter(
+    prefix="/pets",
+    tags=["Pet Operations"],
+    dependencies=[Depends(get_db)]
+)
 
 
 # POST
 @router_pet.post("/{user_id}/")
-async def create_pet_for_user(pet: PetCreate,
-                              user_id: int = Path(..., description="Пользовательский id"),
-                              db: Session = Depends(get_db)):
+async def create_pet_for_user(
+        pet: PetCreate,
+        user_id: int = Path(..., description="Пользовательский id"),
+        db: Session = Depends(get_db)
+):
     logger.info(f'Попытка добавления питомца по кличке "{pet.animal_name}" пользователю с id = "{user_id}"')
     user = crud.get_user(user_id, db)
     crud.check_for_existence_in_db(user, f"Пользователь с id {user_id} не найден")
@@ -33,9 +43,11 @@ async def create_pet_for_user(pet: PetCreate,
 
 # GET
 @router_pet.get("/", response_model=PetSchemas)
-async def show_pet(pet_id: int = Query(..., description="id питомца"),
-                   owner_id: int = Query(..., description="Пользовательский id"),
-                   db: Session = Depends(get_db)):
+async def show_pet(
+        pet_id: int = Query(..., description="id питомца"),
+        owner_id: int = Query(..., description="Пользовательский id"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка отобразить информацию о питомце по id хозяина = {owner_id} и id животного = {pet_id}")
     pet = crud.get_pet(owner_id, pet_id, db)
     crud.check_for_existence_in_db(pet, f"Питомец по id хозяина = {owner_id} и id животного = {pet_id} не найден")
@@ -44,8 +56,10 @@ async def show_pet(pet_id: int = Query(..., description="id питомца"),
 
 
 @router_pets.get("/{user_id}/")
-async def show_pets_of_user(user_id: int = Path(..., description="Пользовательский id"),
-                            db: Session = Depends(get_db)):
+async def show_pets_of_user(
+        user_id: int = Path(..., description="Пользовательский id"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка отобразить всех питомцев пользователя с id = {user_id}")
     pets_of_user = crud.get_all_pets_from_user(user_id, db)
     crud.check_for_existence_in_db(pets_of_user, f"У пользователя с id = {user_id} нет питомцев "
@@ -55,9 +69,11 @@ async def show_pets_of_user(user_id: int = Path(..., description="Пользов
 
 
 @router_pets.get("/", response_model=List[PetSchemas])
-async def show_all_pets(skip: int = Query(0, description="Сколько записей пропустить"),
-                        limit: int = Query(100, description="Максимальное число отображаемых записей"),
-                        db: Session = Depends(get_db)):
+async def show_all_pets(
+        skip: int = Query(0, description="Сколько записей пропустить"),
+        limit: int = Query(100, description="Максимальное число отображаемых записей"),
+        db: Session = Depends(get_db)
+):
     logger.info("Попытка отобразить всех питомцев в магазине")
     all_pets = crud.get_entries(PetModel, db, skip, limit)
     crud.check_for_existence_in_db(all_pets, "База данных питомцев пуста")
@@ -67,11 +83,13 @@ async def show_all_pets(skip: int = Query(0, description="Сколько зап�
 
 # PUT
 @router_pet.put("/{pet_id}/{owner_id}/")
-async def change_pet(pet_id: int = Path(..., description="id питомца"),
-                     owner_id: int = Path(..., description="id пользователя"),
-                     new_animal_name: str = Query(..., description="Измененная кличка"),
-                     new_description: str = Query(..., description="Измененное описание"),
-                     db: Session = Depends(get_db)):
+async def change_pet(
+        pet_id: int = Path(..., description="id питомца"),
+        owner_id: int = Path(..., description="id пользователя"),
+        new_animal_name: str = Query(..., description="Измененная кличка"),
+        new_description: str = Query(..., description="Измененное описание"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка изменить информацию о питомце по id хозяина = {owner_id} и id животного = {pet_id}")
     user = crud.get_user(owner_id, db)
     crud.check_for_existence_in_db(user, f"Пользователь с id {owner_id} не найден")
@@ -86,9 +104,11 @@ async def change_pet(pet_id: int = Path(..., description="id питомца"),
 
 # DELETE
 @router_pet.delete("/{pet_id}/{owner_id}/")
-async def delete_pet(pet_id: int = Path(..., description="id питомца"),
-                     owner_id: int = Path(..., description="id пользователя"),
-                     db: Session = Depends(get_db)):
+async def delete_pet(
+        pet_id: int = Path(..., description="id питомца"),
+        owner_id: int = Path(..., description="id пользователя"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка удаления питомца по id хозяина = {owner_id} и id животного = {pet_id}")
     pet_to_be_deleted = crud.get_pet(owner_id, pet_id, db)
     crud.check_for_existence_in_db(pet_to_be_deleted,
@@ -98,8 +118,10 @@ async def delete_pet(pet_id: int = Path(..., description="id питомца"),
 
 
 @router_pets.delete("/{owner_id}/")
-async def deleting_all_pets_from_user(owner_id: int = Path(..., description="id пользователя"),
-                                      db: Session = Depends(get_db)):
+async def deleting_all_pets_from_user(
+        owner_id: int = Path(..., description="id пользователя"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка удаления все питомцев у пользователя с id = {owner_id}")
     all_pets_from_user = crud.get_all_pets_from_user(owner_id, db)
     crud.check_for_existence_in_db(all_pets_from_user, f"У пользователей с id = {owner_id} нет питомцев"

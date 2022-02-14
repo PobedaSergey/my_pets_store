@@ -25,9 +25,11 @@ async def create_user(new_user: UserCreate, db: Session = Depends(get_db)):
 
 # GET
 @router_users.get("/", response_model=List[UserSchemas])
-async def show_users(skip: int = Query(0, description="Сколько записей пропустить"),
-                     limit: int = Query(100, description="Максимальное число отображаемых записей"),
-                     db: Session = Depends(get_db)):
+async def show_users(
+        skip: int = Query(0, description="Сколько записей пропустить"),
+        limit: int = Query(100, description="Максимальное число отображаемых записей"),
+        db: Session = Depends(get_db)
+):
     logger.info("Попытка отобразить всех пользователей")
     users = crud.get_entries(UserModel, db, skip, limit)
     crud.check_for_existence_in_db(users, "База данных пользователей пуста")
@@ -36,8 +38,10 @@ async def show_users(skip: int = Query(0, description="Сколько запис
 
 
 @router_user.get("/{user_id}/", response_model=UserSchemas)
-async def show_user(user_id: int = Path(..., description="Пользовательский id"),
-                    db: Session = Depends(get_db)):
+async def show_user(
+        user_id: int = Path(..., description="Пользовательский id"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка отобразить пользователя с id = {user_id}")
     user = crud.get_user(user_id, db)
     crud.check_for_existence_in_db(user, f"Пользователь с id {user_id} не найден")
@@ -47,9 +51,11 @@ async def show_user(user_id: int = Path(..., description="Пользовател
 
 # PUT
 @router_user.put("/{user_id}/")
-async def change_user_by_id(user_id: int = Path(..., description="Пользовательский id"),
-                            new_email: str = Query(..., description="Новый email"),
-                            db: Session = Depends(get_db)):
+async def change_user_by_id(
+        user_id: int = Path(..., description="Пользовательский id"),
+        new_email: str = Query(..., description="Новый email"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка изменить информацию о пользователе с id = {user_id}")
     user = crud.get_user(user_id, db)
     crud.check_for_existence_in_db(user, f"Пользователь с id {user_id} не найден")
@@ -62,8 +68,10 @@ async def change_user_by_id(user_id: int = Path(..., description="Пользов
 
 # DELETE
 @router_user.delete("/{user_id}/")
-async def delete_user(user_id: int = Path(..., description="id удаляемого пользователя"),
-                      db: Session = Depends(get_db)):
+async def delete_user(
+        user_id: int = Path(..., description="id удаляемого пользователя"),
+        db: Session = Depends(get_db)
+):
     logger.info(f"Попытка удаления пользователя с id = {user_id}")
     all_pets_from_user = crud.get_all_pets_from_user(user_id, db)
     crud.delete_entries(all_pets_from_user, db)

@@ -9,9 +9,11 @@ from schemas.pets import PetSchemas
 
 
 class UserBase(ModBaseModel):
-    email: str = Field(...,
-                       title="Введите email",
-                       example="example@mail.ru")
+    email: str = Field(
+        ...,
+        title="Введите email",
+        example="example@mail.ru"
+    )
 
     @classmethod
     @validator('email')
@@ -29,9 +31,11 @@ class UserBase(ModBaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(...,
-                          title="Введите пароль, минимум 8 символов",
-                          example="example_password", min_length=8)
+    password: str = Field(
+        ...,
+        title="Введите пароль, минимум 8 символов",
+        example="example_password", min_length=8
+    )
 
 
 class UserSchemas(UserBase):
